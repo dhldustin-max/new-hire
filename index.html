@@ -802,7 +802,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04f</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04g</div>
   </div>
 
 </div>
@@ -1009,12 +1009,30 @@ function linkChecksum(storeId, roleId, payRate) {
 
 function ingestUrlParams() {
   const params = new URLSearchParams(location.search);
-  const s = getState();
+  let s = getState();
+
+  // Fresh-session guard — stops one hire's data leaking to the next on a shared/manager
+  // phone. Every generated link carries a unique hire id (hid). If the opened link is for
+  // a DIFFERENT hire than the one stored here, or the stored session was already submitted,
+  // wipe the prior hire's data before ingesting. Reopening the SAME link (an employee
+  // reloading mid-flow) keeps their progress.
+  if (params.get("store")) {
+    const incomingHid = params.get("hid") || "";
+    const storedHid = s["mgr_hid"] || "";
+    const differentHire = incomingHid && incomingHid !== storedHid;
+    if (differentHire || s["purged-at"]) {
+      localStorage.removeItem(STORAGE_KEY);
+      s = {};
+    }
+  }
+
   let any = false;
   ["store", "role", "manager", "buddy"].forEach(f => {
     const v = params.get(f);
     if (v) { s["mgr_" + f] = v; any = true; }
   });
+  const hid = params.get("hid");
+  if (hid) { s["mgr_hid"] = hid; any = true; }
   // payRate is only accepted with a matching checksum (see linkChecksum above).
   const pr = params.get("payRate");
   if (pr) {
@@ -2598,6 +2616,9 @@ function renderManagerTools() {
     const bud = document.getElementById('mt-buddy').value.trim(); if (bud) p.set('buddy', bud);
     if (pay) { p.set('payRate', pay); p.set('k', linkChecksum(st, ro, pay)); }
     const lg = document.getElementById('mt-lang').value; if (lg !== 'en') p.set('lang', lg);
+    // Unique per-hire id: opening a different hire's link on a shared phone forces a fresh
+    // session (see ingestUrlParams), so the previous hire's typed data can't carry over.
+    p.set('hid', Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
     document.getElementById('mt-url').textContent = base + '?' + p.toString();
     document.getElementById('mt-out').hidden = false;
   };
