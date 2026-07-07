@@ -433,10 +433,10 @@
         <h4 lang="en" style="color:#3730a3;">🔒 Your privacy</h4>
         <h4 lang="es" style="color:#3730a3;">🔒 Tu privacidad</h4>
         <p lang="en" style="font-size:12.5px;color:#1f2937;line-height:1.55;">
-          The photos and information you provide stay <b>on this device</b> until the last step, when you email the finished PDF packet <b>yourself, from your own email account,</b> directly to your store's operating LLC (for I-9 verification, payroll setup, and identity confirmation). Nothing is uploaded to any file-sharing service. After you confirm the email was sent, <b>all photos are automatically erased from this device.</b> You can request deletion of your data at any time via your manager (CCPA/CPRA right). By continuing, you confirm you've read this.
+          What we collect (your name, date of birth, phone, photos of your ID and work-authorization documents, selfie, signature, and signed tax forms) is used only to hire you — for I-9 verification, payroll setup, and identity confirmation — by <b>your store's operating company</b>. The photos and information stay <b>on this device</b> until the last step; when you tap Submit, the finished PDF packet is sent to the company's secure Google account (its HR inbox and Drive). After it's delivered (or after you confirm the email was sent), <b>the photos and signature are erased from this device.</b> The company keeps its copy only as long as needed for hiring and legal record-keeping. You can request access to or deletion of your data at any time via your manager (CCPA/CPRA rights). By continuing, you confirm you've read this.
         </p>
         <p lang="es" style="font-size:12.5px;color:#1f2937;line-height:1.55;">
-          Las fotos e información que proporcionas permanecen <b>en este dispositivo</b> hasta el último paso, cuando tú mismo envías el PDF terminado <b>desde tu propia cuenta de correo</b> directamente al LLC operativo de tu tienda (para verificación I-9, nómina y confirmación de identidad). Nada se sube a servicios de archivos. Al confirmar el envío, <b>todas las fotos se borran automáticamente de este dispositivo.</b> Puedes pedir la eliminación de tus datos en cualquier momento a través de tu gerente (derecho CCPA/CPRA). Al continuar, confirmas que has leído esto.
+          Lo que recopilamos (tu nombre, fecha de nacimiento, teléfono, fotos de tu identificación y documentos de autorización de trabajo, selfie, firma y formularios fiscales firmados) se usa solo para contratarte — verificación I-9, nómina y confirmación de identidad — por <b>la compañía operadora de tu tienda</b>. Las fotos e información permanecen <b>en este dispositivo</b> hasta el último paso; al tocar Enviar, el PDF terminado se envía a la cuenta segura de Google de la compañía (su correo de RR.HH. y Drive). Después de la entrega (o de que confirmes el envío), <b>las fotos y la firma se borran de este dispositivo.</b> La compañía conserva su copia solo el tiempo necesario para la contratación y los registros legales. Puedes pedir acceso o eliminación de tus datos en cualquier momento a través de tu gerente (derechos CCPA/CPRA). Al continuar, confirmas que has leído esto.
         </p>
       </div>
 
@@ -759,8 +759,8 @@
           </label>
         </div>
 
-        <p class="meta" lang="en" id="submit-help-en">🔒 The PDF goes straight from your phone through <b>your own email account</b> — it is never uploaded to any file-sharing site. After you confirm it was sent, all photos are erased from this device.</p>
-        <p class="meta" lang="es" id="submit-help-es">🔒 El PDF va directo desde tu teléfono por <b>tu propia cuenta de correo</b> — nunca se sube a sitios de archivos. Al confirmar el envío, todas las fotos se borran de este dispositivo.</p>
+        <p class="meta" lang="en" id="submit-help-en">🔒 The PDF goes straight from your phone to the company's own secure Google account (its HR inbox + Drive) — no third-party file-sharing site. After it's delivered, all photos and your signature are erased from this device.</p>
+        <p class="meta" lang="es" id="submit-help-es">🔒 El PDF va directo desde tu teléfono a la cuenta segura de Google de la compañía (su correo de RR.HH. + Drive) — sin sitios de archivos de terceros. Tras la entrega, todas las fotos y tu firma se borran de este dispositivo.</p>
       </div>
 
       <div class="card">
@@ -802,7 +802,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04g</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04h</div>
   </div>
 
 </div>
@@ -829,8 +829,15 @@
 </div>
 
 <!-- pdf-lib for embedding signature into the handbook PDF (lazy loaded on Page 4) -->
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
+<!-- pdf-lib is self-hosted (same origin) so no third-party runtime code executes on the
+     page that holds SSN/ID images. SRI hash guards against the file being swapped. -->
+<script src="pdf-lib.min.js" integrity="sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI" crossorigin="anonymous" defer></script>
 <script>
+// Frame-buster: this page captures ID/SSN photos + a drawn signature, so it must never
+// run inside another site's iframe (clickjacking / UI-redress). GitHub Pages can't send
+// X-Frame-Options, so we bust out of frames in JS.
+if (self !== top) { try { top.location = self.location; } catch (e) { document.documentElement.innerHTML = ''; } }
+
 // ============ DATA ============
 const STORES = [
   // Per-store wage info for Wage Theft Prevention Notice (CA Labor Code §2810.5).
@@ -991,7 +998,24 @@ function sanitizeStateForPdf(s) {
 function patchState(patch) {
   const s = getState();
   Object.assign(s, patch);
+  s['touched-at'] = Date.now();  // for the abandoned-session TTL purge (see init)
   try { setState(s); } catch (err) { console.warn("localStorage quota", err); }
+}
+
+// Abandoned-session TTL: if a session captured PII but was never submitted and hasn't been
+// touched in ABANDON_TTL_MS, wipe the sensitive blobs. Protects a shared/kiosk phone where a
+// hire uploads their ID/SSN, walks away, and never presses Submit. Called once at init().
+const ABANDON_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+function purgeAbandonedSession() {
+  const s = getState();
+  if (s['purged-at']) return;                         // already handled
+  const touched = s['touched-at'] || 0;
+  if (!touched || (Date.now() - touched) < ABANDON_TTL_MS) return;
+  const heavy = ['selfie-data','doc-id-front','doc-id-back','doc-ssn','doc-food','doc-tax-forms','signature-data','handbook-signed-pdf'];
+  let hadPII = false;
+  heavy.forEach(k => { if (s[k]) { delete s[k]; hadPII = true; } });
+  ['hire-name','hire-phone','hire-dob','hire-startdate'].forEach(k => delete s[k]);
+  if (hadPII) { s['abandoned-purge-at'] = new Date().toISOString(); setState(s); }
 }
 
 // ============ URL PARAMS ============
@@ -1640,7 +1664,7 @@ async function generateConsolidatedPdf() {
       ['Store / Entity', store.name + '  /  ' + store.legalEntity],
       ['Signature drawn at', fmt(s['signature-at'])],
       ['Packet assembled at', new Date().toLocaleString('en-US')],
-      ['Pay rate on manager link', s['mgr_payRate'] ? ('$' + s['mgr_payRate'] + '/hr — checksum VERIFIED') : (s['mgr_payRate_invalid'] ? 'REJECTED (checksum mismatch — possible URL edit)' : 'not provided')],
+      ['Pay rate on manager link', s['mgr_payRate'] ? ('$' + s['mgr_payRate'] + '/hr — as supplied in the manager link (confirm in person)') : (s['mgr_payRate_invalid'] ? 'REJECTED (link checksum mismatch — possible URL edit)' : 'not provided')],
       ['Device / browser', (navigator.userAgent || '-').slice(0, 95)]
     ];
     meta.forEach(([k, v]) => {
@@ -2491,7 +2515,7 @@ async function finalizeSubmission(reportLine) {
         reportLine + '\n\n' +
         'Store: ' + store.name + '\nEntity: ' + store.legalEntity + '\n' +
         'Name: ' + (s["hire-name"] || '-') + '\nRole: ' + (role ? role.en : '-') + '\n' +
-        'Pay rate on link: ' + (s['mgr_payRate'] ? ('$' + s['mgr_payRate'] + '/hr (verified link)') : 'NOT VERIFIED — confirm in person') + '\n' +
+        'Pay rate on link: ' + (s['mgr_payRate'] ? ('$' + s['mgr_payRate'] + '/hr (as supplied in link — confirm in person)') : 'not supplied — confirm in person') + '\n' +
         'Start date: ' + (s["hire-startdate"] || '-') + '\n' +
         ((ageAtStart(s) !== null && ageAtStart(s) < 18) ? '\n*** MINOR (under 18) — WORK PERMIT REQUIRED BEFORE FIRST SHIFT; no alcohol service; check permitted hours. ***\n' : '') + '\n' +
         'ACTION REQUIRED:\n' +
@@ -2630,6 +2654,9 @@ function renderManagerTools() {
 function init() {
   // Migrate old keys
   ['omc_intake_v1', 'omc_intake_v2'].forEach(k => localStorage.removeItem(k));
+
+  // Wipe any stale, never-submitted PII left on this device before doing anything else.
+  purgeAbandonedSession();
 
   // Manager mode: ?manager-tools renders the link generator instead of the wizard.
   if (new URLSearchParams(location.search).has('manager-tools')) { renderManagerTools(); return; }
