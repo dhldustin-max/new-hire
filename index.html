@@ -447,6 +447,10 @@
           <label lang="en">Full legal name</label>
           <label lang="es">Nombre legal completo</label>
           <input id="hire-name" type="text" autocomplete="name" placeholder="First + Last / Nombre + Apellido" />
+          <div id="name-latin-warning" style="display:none; margin-top:8px; padding:10px; border-radius:8px; background:#fef2f2; border:1px solid #ef4444;">
+            <p lang="en" style="margin:0; font-size:12.5px; color:#991b1b;">Please use <b>English letters only</b> — type your name exactly as it appears on your ID / work documents (I-9, W-4).</p>
+            <p lang="es" style="margin:0; font-size:12.5px; color:#991b1b;">Usa <b>solo letras en inglés</b> — escribe tu nombre exactamente como aparece en tu ID / documentos de trabajo (I-9, W-4).</p>
+          </div>
         </div>
         <div class="field">
           <label lang="en">Mobile phone</label>
@@ -950,6 +954,27 @@ function getState() {
   catch (e) { return {}; }
 }
 function setState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+// ---- WinAnsi guard: the packet PDF uses standard fonts that can only print Latin
+// characters (English/Spanish). Korean/CJK etc. would crash pdf-lib mid-generation.
+// Names must match the employee's ID / work-authorization documents anyway (I-9, W-4),
+// which are printed in Latin letters — so we block non-Latin input up front and, as a
+// safety net, replace any stray unsupported character with '?' instead of crashing.
+const WINANSI_RE = /^[\x20-\x7E\xA0-\xFF€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ\n\r\t]*$/;
+function winAnsiOk(str) { return WINANSI_RE.test(String(str || '')); }
+function winAnsiSafe(str) {
+  return String(str).replace(/[^\x20-\x7E\xA0-\xFF€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ\n\r\t]/g, '?');
+}
+// Returns a copy of state where every drawable string is WinAnsi-safe.
+// Skips data: URLs (images/PDFs — replacing chars there would corrupt them).
+function sanitizeStateForPdf(s) {
+  const out = {};
+  for (const k in s) {
+    const v = s[k];
+    out[k] = (typeof v === 'string' && v.slice(0, 5) !== 'data:') ? winAnsiSafe(v) : v;
+  }
+  return out;
+}
 function patchState(patch) {
   const s = getState();
   Object.assign(s, patch);
@@ -1143,7 +1168,7 @@ async function stampEsignOnPage(pdfDoc, page, font, s, termsText) {
 }
 
 async function generateSignedHandbook() {
-  const s = getState();
+  const s = sanitizeStateForPdf(getState());
   const store = STORES.find(x => x.id === s["mgr_store"]);
   if (!store) return null;
   if (!store.handbookUrl) return null;
@@ -1336,7 +1361,7 @@ function uint8ArrayToDataUrl(u8, mime) {
 async function generateConsolidatedPdf() {
   if (typeof PDFLib === 'undefined') return null;
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
-  const s = getState();
+  const s = sanitizeStateForPdf(getState());
   const store = STORES.find(x => x.id === s["mgr_store"]);
   if (!store) return null;
 
@@ -1695,7 +1720,7 @@ function wrapText(text, maxChars) {
 
 function canAdvanceFrom(n) {
   const s = getState();
-  if (n === 1) return !!(s["hire-name"] && s["hire-phone"] && s["hire-dob"] && s["hire-startdate"]);
+  if (n === 1) return !!(s["hire-name"] && winAnsiOk(s["hire-name"]) && s["hire-phone"] && s["hire-dob"] && s["hire-startdate"]);
   if (n === 2) return !!s["selfie-data"];
   if (n === 3) return DOC_SLOTS.filter(d => d.required).every(d => !!s[d.key]);
   if (n === 4) return ACK_ITEMS.every(a => !!s[a.key]) && !!s["signature-data"];
@@ -1714,7 +1739,7 @@ function bindInputs() {
   ['hire-name', 'hire-phone', 'hire-dob', 'hire-startdate'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    const handler = () => { patchState({ [id]: el.value }); if (id === 'hire-dob' || id === 'hire-startdate') updateMinorWarning(); evaluateNext(); };
+    const handler = () => { patchState({ [id]: el.value }); if (id === 'hire-dob' || id === 'hire-startdate') updateMinorWarning(); if (id === 'hire-name') updateNameWarning(); evaluateNext(); };
     el.addEventListener('input', handler);
     el.addEventListener('change', handler);
   });
@@ -1726,6 +1751,7 @@ function loadInputs() {
     if (el && s[id] != null) el.value = s[id];
   });
   updateMinorWarning();
+  updateNameWarning();
 }
 
 // Age at start date (falls back to today if no start date yet). Returns null without a DOB.
@@ -1745,6 +1771,12 @@ function updateMinorWarning() {
   if (!el) return;
   const age = ageAtStart();
   el.style.display = (age !== null && age < 18) ? 'block' : 'none';
+}
+function updateNameWarning() {
+  const el = document.getElementById('name-latin-warning');
+  if (!el) return;
+  const name = getState()['hire-name'] || '';
+  el.style.display = (name && !winAnsiOk(name)) ? 'block' : 'none';
 }
 
 // ============ FILE PROCESSING ============
@@ -2484,6 +2516,12 @@ function renderManagerTools() {
     const ro = document.getElementById('mt-role').value;
     const pay = document.getElementById('mt-pay').value;
     if (pay && (parseFloat(pay) < 16 || parseFloat(pay) > 99)) { alert('Pay rate looks wrong (CA minimum is ~$17). Double-check.'); return; }
+    const mgrName = document.getElementById('mt-mgr').value.trim();
+    const budName = document.getElementById('mt-buddy').value.trim();
+    if (!winAnsiOk(mgrName) || !winAnsiOk(budName)) {
+      alert('Manager/buddy names: English letters only, please (영문으로 입력해주세요) — the PDF packet can only print Latin characters.');
+      return;
+    }
     const p = new URLSearchParams();
     p.set('store', st); p.set('role', ro);
     const mgr = document.getElementById('mt-mgr').value.trim(); if (mgr) p.set('manager', mgr);
