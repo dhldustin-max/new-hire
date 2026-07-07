@@ -433,10 +433,10 @@
         <h4 lang="en" style="color:#3730a3;">🔒 Your privacy</h4>
         <h4 lang="es" style="color:#3730a3;">🔒 Tu privacidad</h4>
         <p lang="en" style="font-size:12.5px;color:#1f2937;line-height:1.55;">
-          What we collect (your name, date of birth, phone, photos of your ID and work-authorization documents, selfie, signature, and signed tax forms) is used only to hire you — for I-9 verification, payroll setup, and identity confirmation — by <b>your store's operating company</b>. The photos and information stay <b>on this device</b> until the last step; when you tap Submit, the finished PDF packet is sent to the company's secure Google account (its HR inbox and Drive). After it's delivered (or after you confirm the email was sent), <b>the photos and signature are erased from this device.</b> The company keeps its copy only as long as needed for hiring and legal record-keeping. You can request access to or deletion of your data at any time via your manager (CCPA/CPRA rights). By continuing, you confirm you've read this.
+          What we collect (your name, date of birth, phone, photos of your ID and work-authorization documents, selfie, signature, and signed tax forms) is used only to hire you — for I-9 verification, payroll setup, and identity confirmation — by <b>your store's operating company</b>. Everything stays <b>on this device</b>; at the last step you save the finished PDF packet to your phone and <b>hand it to your manager</b> (nothing is uploaded to any server or file-sharing site). After you confirm you saved it, <b>the photos and signature are erased from this device.</b> Your store keeps its copy only as long as needed for hiring and legal record-keeping. You can request access to or deletion of your data at any time via your manager (CCPA/CPRA rights). By continuing, you confirm you've read this.
         </p>
         <p lang="es" style="font-size:12.5px;color:#1f2937;line-height:1.55;">
-          Lo que recopilamos (tu nombre, fecha de nacimiento, teléfono, fotos de tu identificación y documentos de autorización de trabajo, selfie, firma y formularios fiscales firmados) se usa solo para contratarte — verificación I-9, nómina y confirmación de identidad — por <b>la compañía operadora de tu tienda</b>. Las fotos e información permanecen <b>en este dispositivo</b> hasta el último paso; al tocar Enviar, el PDF terminado se envía a la cuenta segura de Google de la compañía (su correo de RR.HH. y Drive). Después de la entrega (o de que confirmes el envío), <b>las fotos y la firma se borran de este dispositivo.</b> La compañía conserva su copia solo el tiempo necesario para la contratación y los registros legales. Puedes pedir acceso o eliminación de tus datos en cualquier momento a través de tu gerente (derechos CCPA/CPRA). Al continuar, confirmas que has leído esto.
+          Lo que recopilamos (tu nombre, fecha de nacimiento, teléfono, fotos de tu identificación y documentos de autorización de trabajo, selfie, firma y formularios fiscales firmados) se usa solo para contratarte — verificación I-9, nómina y confirmación de identidad — por <b>la compañía operadora de tu tienda</b>. Todo permanece <b>en este dispositivo</b>; en el último paso guardas el PDF terminado en tu teléfono y <b>se lo entregas a tu gerente</b> (nada se sube a ningún servidor ni sitio de archivos). Tras confirmar que lo guardaste, <b>las fotos y la firma se borran de este dispositivo.</b> Tu tienda conserva su copia solo el tiempo necesario para la contratación y los registros legales. Puedes pedir acceso o eliminación de tus datos en cualquier momento a través de tu gerente (derechos CCPA/CPRA). Al continuar, confirmas que has leído esto.
         </p>
       </div>
 
@@ -717,32 +717,14 @@
       </div>
 
       <div class="card">
-        <h4 lang="en">Submit</h4>
-        <h4 lang="es">Enviar</h4>
-        <p lang="en"><b>The email does not send itself</b> — you press Send in your own email app. That way the packet goes out from YOUR account and a copy stays in your Sent folder.</p>
-        <p lang="es"><b>El correo no se envía solo</b> — tú presionas Enviar en tu propia app de correo. Así el paquete sale de TU cuenta y queda una copia en tus Enviados.</p>
-        <ol lang="en" style="font-size:13.5px; line-height:1.7; padding-left:20px; margin:8px 0;">
-          <li><b>Copy</b> the email address below</li>
-          <li>Tap <b>📧 Submit</b> — the share sheet opens with the PDF attached</li>
-          <li>Choose <b>Mail</b> or <b>Gmail</b></li>
-          <li><b>Paste</b> the address into "To:" and tap <b>Send</b></li>
-        </ol>
-        <ol lang="es" style="font-size:13.5px; line-height:1.7; padding-left:20px; margin:8px 0;">
-          <li><b>Copia</b> el correo de abajo</li>
-          <li>Toca <b>📧 Enviar</b> — se abre el menú de compartir con el PDF adjunto</li>
-          <li>Elige <b>Mail</b> o <b>Gmail</b></li>
-          <li><b>Pega</b> el correo en "Para:" y toca <b>Enviar</b></li>
-        </ol>
-        <div style="display:flex;gap:8px;align-items:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin:8px 0;">
-          <b id="company-email-display" style="font-size:14px;flex:1;word-break:break-all;">—</b>
-          <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="copyCompanyEmail()">
-            <span lang="en">Copy</span><span lang="es">Copiar</span>
-          </button>
-        </div>
+        <h4 lang="en">Save your packet</h4>
+        <h4 lang="es">Guarda tu paquete</h4>
+        <p lang="en">Tap the button to save your completed packet as a PDF. Then <b>give it to your manager</b> — send it to them, or just bring your phone on Day 1. You do <b>not</b> need to email anyone.</p>
+        <p lang="es">Toca el botón para guardar tu paquete completo como PDF. Luego <b>entrégaselo a tu gerente</b> — envíaselo o simplemente trae tu teléfono el Día 1. <b>No</b> necesitas enviar ningún correo.</p>
 
         <button class="btn-big" id="submit-btn" onclick="submitToManager()">
-          <span lang="en">📧 Submit</span>
-          <span lang="es">📧 Enviar</span>
+          <span lang="en">💾 Save my packet (PDF)</span>
+          <span lang="es">💾 Guardar mi paquete (PDF)</span>
         </button>
         <div id="submit-status" class="submit-status" hidden></div>
 
@@ -750,28 +732,17 @@
           <label>
             <input type="checkbox" id="sent-confirm-cb" onchange="onSentConfirm()" />
             <span>
-              <b lang="en">I sent the email with the PDF attached.</b>
-              <b lang="es">Envié el correo con el PDF adjunto.</b>
+              <b lang="en">I saved my packet and will give it to my manager.</b>
+              <b lang="es">Guardé mi paquete y se lo daré a mi gerente.</b>
               <br>
-              <span style="font-size:11.5px;color:#92400e;" lang="en">Checking this erases your photos, ID, and signature from this device for your privacy.</span>
-              <span style="font-size:11.5px;color:#92400e;" lang="es">Al marcar, tus fotos, ID y firma se borran de este dispositivo por tu privacidad.</span>
+              <span style="font-size:11.5px;color:#92400e;" lang="en">Checking this erases your photos, ID, and signature from this device for your privacy. Make sure you saved the PDF first.</span>
+              <span style="font-size:11.5px;color:#92400e;" lang="es">Al marcar, tus fotos, ID y firma se borran de este dispositivo por tu privacidad. Asegúrate de haber guardado el PDF primero.</span>
             </span>
           </label>
         </div>
 
-        <p class="meta" lang="en" id="submit-help-en">🔒 The PDF goes straight from your phone to the company's own secure Google account (its HR inbox + Drive) — no third-party file-sharing site. After it's delivered, all photos and your signature are erased from this device.</p>
-        <p class="meta" lang="es" id="submit-help-es">🔒 El PDF va directo desde tu teléfono a la cuenta segura de Google de la compañía (su correo de RR.HH. + Drive) — sin sitios de archivos de terceros. Tras la entrega, todas las fotos y tu firma se borran de este dispositivo.</p>
-      </div>
-
-      <div class="card">
-        <h4 lang="en">Backup option</h4>
-        <h4 lang="es">Opción de respaldo</h4>
-        <p lang="en">If sharing fails, download the PDF packet and email it yourself (or bring your phone on Day 1).</p>
-        <p lang="es">Si compartir falla, descarga el PDF y envíalo tú mismo (o trae tu teléfono el Día 1).</p>
-        <button class="btn btn-secondary" id="save-all-btn" onclick="downloadPacket()" style="width:100%;margin-top:6px;">
-          <span lang="en">💾 Download the PDF packet</span>
-          <span lang="es">💾 Descargar el paquete PDF</span>
-        </button>
+        <p class="meta" lang="en" id="submit-help-en">🔒 Your packet stays on your phone — it is not uploaded anywhere. You hand it to your manager directly. After you confirm you saved it, all photos and your signature are erased from this device.</p>
+        <p class="meta" lang="es" id="submit-help-es">🔒 Tu paquete permanece en tu teléfono — no se sube a ningún lado. Se lo entregas a tu gerente directamente. Tras confirmar que lo guardaste, todas las fotos y tu firma se borran de este dispositivo.</p>
       </div>
 
       <div class="card">
@@ -802,7 +773,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04h</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04i</div>
   </div>
 
 </div>
@@ -2331,15 +2302,13 @@ function dataUrlToBlob(dataUrl) {
   return new Blob([u8arr], { type: mime });
 }
 
-// Where completed packets are emailed. PII never touches any third-party file host:
-// the PDF travels from the employee's phone through THEIR OWN mail account to this address.
-const COMPANY_EMAIL = 'omchospitalityhr@gmail.com';
-// Direct-submit endpoint: a Google Apps Script web app running under the COMPANY'S OWN
-// Google account (see google-apps-script-submit.gs next to this file). When set, Submit
-// uploads the packet straight to the company Gmail + Drive — the employee doesn't have to
-// send an email. Empty string = manual share-sheet flow. PII still touches no third party
-// (browser → Google, same destination the email would reach).
-const SUBMIT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyPC1RoJJ1I-wJaj1knTewcvSzmtF6pHiypgxi_PWqlFMHbX-cemQIDVJRunJC4LSE-/exec';
+// PDF-SAVE-ONLY flow (Dustin 2026-07-04, option 2): the employee saves the packet to their
+// own phone and hands it to their manager, who forwards it to OMC. Nothing is auto-uploaded
+// to any central inbox — this keeps each store's records at the operating-entity level.
+const COMPANY_EMAIL = 'omchospitalityhr@gmail.com';  // kept for the (dormant) fallbacks only
+// Direct-upload endpoint intentionally DISABLED. The Apps Script + this URL still exist and
+// can be re-enabled (paste the /exec URL here) if counsel later approves per-entity routing.
+const SUBMIT_ENDPOINT = '';
 const SUBMIT_TOKEN = 'OMC-PKT-2026';  // must match SHARED_TOKEN in the Apps Script
 
 // Uint8Array → base64 (chunked; large PDFs would overflow the argument list otherwise).
@@ -2421,49 +2390,47 @@ async function submitToManager() {
       }
     }
 
-    // Preferred: native share sheet — the PDF goes out via the employee's own mail app.
+    // Preferred on mobile: native share sheet, framed as SAVE. iOS/Android show "Save to
+    // Files" plus any messaging app, so the employee can keep the PDF or send it to their
+    // manager. No email address is prefilled — nothing is auto-sent anywhere.
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       showStatus('loading', lang === 'en'
-        ? '📤 Opening your share sheet — choose Mail/Gmail and send to ' + COMPANY_EMAIL
-        : '📤 Abriendo el menú de compartir — elige Mail/Gmail y envía a ' + COMPANY_EMAIL);
+        ? '📥 Choose "Save to Files" to keep your packet — or send it straight to your manager.'
+        : '📥 Elige "Guardar en Archivos" para guardar tu paquete — o envíaselo directamente a tu gerente.');
       try {
-        await navigator.share({ files: [file], title: subject, text: 'Send to: ' + COMPANY_EMAIL });
+        await navigator.share({ files: [file], title: subject });
       } catch (shareErr) {
         if (shareErr && shareErr.name === 'AbortError') {
-          showStatus('error', lang === 'en' ? 'Share canceled — tap Submit to try again.' : 'Compartir cancelado — toca Enviar para reintentar.');
+          showStatus('error', lang === 'en' ? 'Canceled — tap the button to try again.' : 'Cancelado — toca el botón para reintentar.');
           btn.disabled = false;
           return;
         }
         throw shareErr;
       }
     } else {
-      // Fallback (desktop / unsupported browsers): download + open a pre-addressed email.
+      // Fallback (desktop / unsupported browsers): plain download to the device.
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const u = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = u; a.download = filename;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(u), 4000);
-      const mail = 'mailto:' + COMPANY_EMAIL
-        + '?subject=' + encodeURIComponent(subject)
-        + '&body=' + encodeURIComponent('New hire intake packet attached: ' + filename + '\n(Please attach the PDF that was just downloaded.)');
-      window.location.href = mail;
       showStatus('loading', lang === 'en'
-        ? '💾 PDF downloaded. Your email app is opening — attach the downloaded PDF and send it to ' + COMPANY_EMAIL + '.'
-        : '💾 PDF descargado. Se abre tu correo — adjunta el PDF descargado y envíalo a ' + COMPANY_EMAIL + '.');
+        ? '💾 Packet downloaded to this device. Give the PDF to your manager.'
+        : '💾 Paquete descargado en este dispositivo. Entrega el PDF a tu gerente.');
     }
 
-    // Ask the employee to confirm the email actually went out; confirming erases local PII.
+    // Ask the employee to confirm they saved it; confirming erases local PII.
     document.getElementById('sent-confirm').hidden = false;
     showStatus('loading', lang === 'en'
-      ? '✉️ After you send the email, check the box below to finish.'
-      : '✉️ Después de enviar el correo, marca la casilla de abajo para terminar.');
+      ? '✅ Saved your packet? Check the box below to finish (this erases the photos from this phone).'
+      : '✅ ¿Guardaste tu paquete? Marca la casilla de abajo para terminar (esto borra las fotos de este teléfono).');
     btn.disabled = false;
   } catch (err) {
-    console.error("Submit error:", err);
+    console.error("Save error:", err);
     showStatus('error', lang === 'en'
-      ? '⚠️ Couldn\'t share: ' + (err.message || err) + '. Use "Download the PDF packet" below and email it to ' + COMPANY_EMAIL + '.'
-      : '⚠️ No se pudo compartir: ' + (err.message || err) + '. Usa "Descargar el paquete PDF" y envíalo a ' + COMPANY_EMAIL + '.');
+      ? '⚠️ Couldn\'t build the packet: ' + (err.message || err) + '. Tap the button to try again.'
+      : '⚠️ No se pudo crear el paquete: ' + (err.message || err) + '. Toca el botón para reintentar.');
     btn.disabled = false;
   }
 }
@@ -2492,7 +2459,7 @@ async function onSentConfirm() {
   const cb = document.getElementById('sent-confirm-cb');
   if (!cb.checked) return;
   patchState({ 'sent-confirmed-at': new Date().toISOString() });
-  await finalizeSubmission('The employee reports they emailed their intake packet to ' + COMPANY_EMAIL + '.');
+  await finalizeSubmission('The employee saved their completed intake packet (PDF) on their phone and will hand it to the manager.');
 }
 
 // Shared completion path (manual-share confirm AND direct upload): notify the store
@@ -2503,8 +2470,11 @@ async function finalizeSubmission(reportLine) {
   const store = STORES.find(x => x.id === s["mgr_store"]);
   patchState({ 'submitted-at': new Date().toISOString() });
 
-  // Optional heads-up notification to the store (Web3Forms, TEXT ONLY — no photos, no SSN).
-  if (store && store.web3formsKey) {
+  // Store heads-up notification is DISABLED in the PDF-save-only flow (Dustin 2026-07-04):
+  // the employee hands the packet to the manager directly, so nothing — not even a text
+  // notification — is transmitted to any third party. Flip NOTIFY_STORE to re-enable.
+  const NOTIFY_STORE = false;
+  if (NOTIFY_STORE && store && store.web3formsKey) {
     try {
       const role = ROLES[s["mgr_role"]];
       const fd = new FormData();
@@ -2519,7 +2489,7 @@ async function finalizeSubmission(reportLine) {
         'Start date: ' + (s["hire-startdate"] || '-') + '\n' +
         ((ageAtStart(s) !== null && ageAtStart(s) < 18) ? '\n*** MINOR (under 18) — WORK PERMIT REQUIRED BEFORE FIRST SHIFT; no alcohol service; check permitted hours. ***\n' : '') + '\n' +
         'ACTION REQUIRED:\n' +
-        '  1. Confirm the packet email arrived at ' + COMPANY_EMAIL + '.\n' +
+        '  1. GET the packet PDF from the employee (they saved it on their phone).\n' +
         '  2. PRINT the last page ("Day 1 In-Person Signatures").\n' +
         '  3. On Day 1: employee re-signs IN INK + an officer of ' + store.legalEntity + ' countersigns IN INK.\n' +
         '  4. Verify original documents in person — I-9 Section 2 within 3 days of hire.\n' +
@@ -2530,11 +2500,11 @@ async function finalizeSubmission(reportLine) {
 
   purgeSensitiveData();
   showStatus('success', lang === 'en'
-    ? '✅ Done! Your photos and signature were erased from this device. On Day 1 you\'ll sign a printed copy in person with your manager. See you then!'
-    : '✅ ¡Listo! Tus fotos y firma fueron borradas de este dispositivo. El Día 1 firmarás una copia impresa en persona con tu gerente. ¡Te vemos!');
+    ? '✅ Done! Your photos and signature were erased from this device. Give the saved PDF to your manager — on Day 1 you\'ll sign a printed copy in person. See you then!'
+    : '✅ ¡Listo! Tus fotos y firma fueron borradas de este dispositivo. Entrega el PDF guardado a tu gerente — el Día 1 firmarás una copia impresa en persona. ¡Te vemos!');
   const btn = document.getElementById('submit-btn');
   btn.classList.add('btn-success');
-  btn.innerHTML = '<span lang="en">✓ Sent</span><span lang="es">✓ Enviado</span>';
+  btn.innerHTML = '<span lang="en">✓ Saved</span><span lang="es">✓ Guardado</span>';
   btn.disabled = true;
   renderVerifyList(); renderThumbnails();
 }
