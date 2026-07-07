@@ -802,7 +802,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04d</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04e</div>
   </div>
 
 </div>
@@ -2292,6 +2292,21 @@ function dataUrlToBlob(dataUrl) {
 // Where completed packets are emailed. PII never touches any third-party file host:
 // the PDF travels from the employee's phone through THEIR OWN mail account to this address.
 const COMPANY_EMAIL = 'omchospitalityhr@gmail.com';
+// Direct-submit endpoint: a Google Apps Script web app running under the COMPANY'S OWN
+// Google account (see google-apps-script-submit.gs next to this file). When set, Submit
+// uploads the packet straight to the company Gmail + Drive — the employee doesn't have to
+// send an email. Empty string = manual share-sheet flow. PII still touches no third party
+// (browser → Google, same destination the email would reach).
+const SUBMIT_ENDPOINT = '';  // paste the Apps Script /exec URL here
+const SUBMIT_TOKEN = 'OMC-PKT-2026';  // must match SHARED_TOKEN in the Apps Script
+
+// Uint8Array → base64 (chunked; large PDFs would overflow the argument list otherwise).
+function uint8ToBase64(u8) {
+  let bin = '';
+  const CH = 0x8000;
+  for (let i = 0; i < u8.length; i += CH) bin += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
+  return btoa(bin);
+}
 
 function copyCompanyEmail() {
   navigator.clipboard.writeText(COMPANY_EMAIL).then(() => {
@@ -2330,6 +2345,39 @@ async function submitToManager() {
     const subject = 'New Hire Intake — ' + store.name + ' — ' + (s["hire-name"] || '(unnamed)');
     const file = new File([pdfBytes], filename, { type: 'application/pdf' });
     patchState({ 'share-attempted-at': new Date().toISOString() });
+
+    // Preferred when configured: direct upload to the company's own Google account
+    // (Apps Script → company Gmail + Drive). Falls back to the share flow on any failure.
+    if (SUBMIT_ENDPOINT) {
+      showStatus('loading', lang === 'en'
+        ? '📤 Sending your packet to the company...'
+        : '📤 Enviando tu paquete a la empresa...');
+      try {
+        const resp = await fetch(SUBMIT_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // simple request — no CORS preflight
+          body: JSON.stringify({
+            token: SUBMIT_TOKEN,
+            filename: filename,
+            subject: subject,
+            name: s['hire-name'] || '',
+            store: store.name,
+            entity: store.legalEntity,
+            pdfBase64: uint8ToBase64(pdfBytes)
+          })
+        });
+        const out = await resp.json();
+        if (!out || !out.ok) throw new Error((out && out.error) || 'upload rejected');
+        patchState({ 'delivered-direct-at': new Date().toISOString() });
+        await finalizeSubmission('The packet was DELIVERED automatically to ' + COMPANY_EMAIL + ' (email + Drive folder "New Hire Packets").');
+        return;
+      } catch (upErr) {
+        console.warn('Direct upload failed — falling back to manual share:', upErr);
+        showStatus('loading', lang === 'en'
+          ? '⚠️ Auto-send didn\'t work — no problem, use the share sheet instead...'
+          : '⚠️ El envío automático falló — no hay problema, usa el menú de compartir...');
+      }
+    }
 
     // Preferred: native share sheet — the PDF goes out via the employee's own mail app.
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -2401,10 +2449,17 @@ async function downloadPacket() {
 async function onSentConfirm() {
   const cb = document.getElementById('sent-confirm-cb');
   if (!cb.checked) return;
+  patchState({ 'sent-confirmed-at': new Date().toISOString() });
+  await finalizeSubmission('The employee reports they emailed their intake packet to ' + COMPANY_EMAIL + '.');
+}
+
+// Shared completion path (manual-share confirm AND direct upload): notify the store
+// (text-only, no PII), purge local PII, and lock the submit UI.
+async function finalizeSubmission(reportLine) {
   const s = getState();
   const lang = getLang();
   const store = STORES.find(x => x.id === s["mgr_store"]);
-  patchState({ 'sent-confirmed-at': new Date().toISOString(), 'submitted-at': new Date().toISOString() });
+  patchState({ 'submitted-at': new Date().toISOString() });
 
   // Optional heads-up notification to the store (Web3Forms, TEXT ONLY — no photos, no SSN).
   if (store && store.web3formsKey) {
@@ -2415,7 +2470,7 @@ async function onSentConfirm() {
       fd.append('subject', 'New hire packet sent — ' + store.name + ' — ' + (s["hire-name"] || ''));
       fd.append('from_name', s["hire-name"] || 'New Hire');
       fd.append('message',
-        'The employee reports they emailed their intake packet to ' + COMPANY_EMAIL + '.\n\n' +
+        reportLine + '\n\n' +
         'Store: ' + store.name + '\nEntity: ' + store.legalEntity + '\n' +
         'Name: ' + (s["hire-name"] || '-') + '\nRole: ' + (role ? role.en : '-') + '\n' +
         'Pay rate on link: ' + (s['mgr_payRate'] ? ('$' + s['mgr_payRate'] + '/hr (verified link)') : 'NOT VERIFIED — confirm in person') + '\n' +
