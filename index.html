@@ -790,7 +790,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04b</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04c</div>
   </div>
 
 </div>
@@ -1160,7 +1160,7 @@ async function stampEsignOnPage(pdfDoc, page, font, s, termsText) {
     const sigImg = await pdfDoc.embedPng(dataUrlToUint8Array(s['signature-data']));
     const targetW = 170, r = targetW / sigImg.width, h = sigImg.height * r;
     page.drawImage(sigImg, { x: 80, y: ESIGN_LINE_Y, width: targetW, height: h });
-    page.drawText(new Date().toLocaleDateString(), { x: 360, y: ESIGN_LINE_Y + 6, size: 11, font });
+    page.drawText(new Date().toLocaleDateString('en-US'), { x: 360, y: ESIGN_LINE_Y + 6, size: 11, font });
     // Optional per-hire confirmed-terms line, drawn below the signature labels (clear space).
     if (termsText) {
       page.drawText(termsText, { x: 80, y: ESIGN_LINE_Y - 48, size: 9, font, color: rgb(0.1, 0.1, 0.1) });
@@ -1333,7 +1333,7 @@ async function generateSignedHandbook() {
   y -= 12;
   page.drawText(T.sigLabel, { x: 50, y, size: 8, font, color: rgb(0.4,0.4,0.4) });
   y -= 12;
-  page.drawText(T.signed + ': ' + (s["hire-name"] || '-') + '   |   ' + T.date + ': ' + new Date().toLocaleDateString(), { x: 50, y, size: 9, font });
+  page.drawText(T.signed + ': ' + (s["hire-name"] || '-') + '   |   ' + T.date + ': ' + new Date().toLocaleDateString('en-US'), { x: 50, y, size: 9, font });
   y -= 16;
   page.drawText(T.viaApp, { x: 50, y, size: 8, font, color: rgb(0.4,0.4,0.4) });
 
@@ -1420,7 +1420,9 @@ async function generateConsolidatedPdf() {
 
   cover.drawText('SUBMITTED', { x: 50, y, size: 9, font: fontBold, color: rgb(0.4, 0.4, 0.4) });
   y -= 14;
-  cover.drawText(new Date().toLocaleString(), { x: 50, y, size: 10, font });
+  // 'en-US' is REQUIRED here: on Korean-locale phones toLocaleString() emits 오전/오후,
+  // which the WinAnsi PDF font cannot encode (real crash, 2026-07-04).
+  cover.drawText(new Date().toLocaleString('en-US'), { x: 50, y, size: 10, font });
   y -= 24;
 
   cover.drawLine({ start: { x: 50, y }, end: { x: W - 50, y }, thickness: 0.6, color: rgb(0.85, 0.85, 0.85) });
@@ -1602,12 +1604,12 @@ async function generateConsolidatedPdf() {
     let ay = H - 60;
     ap.drawText('ELECTRONIC SIGNATURE AUDIT TRAIL', { x: 50, y: ay, size: 13, font: fontBold }); ay -= 16;
     ap.drawText('Recorded automatically by the company\'s new-hire intake app on the employee\'s device.', { x: 50, y: ay, size: 8.5, font, color: rgb(0.4, 0.4, 0.4) }); ay -= 20;
-    const fmt = (iso) => { try { return iso ? new Date(iso).toLocaleString() : '-'; } catch (e) { return iso || '-'; } };
+    const fmt = (iso) => { try { return iso ? new Date(iso).toLocaleString('en-US') : '-'; } catch (e) { return iso || '-'; } };
     const meta = [
       ['Employee', s['hire-name'] || '-'],
       ['Store / Entity', store.name + '  /  ' + store.legalEntity],
       ['Signature drawn at', fmt(s['signature-at'])],
-      ['Packet assembled at', new Date().toLocaleString()],
+      ['Packet assembled at', new Date().toLocaleString('en-US')],
       ['Pay rate on manager link', s['mgr_payRate'] ? ('$' + s['mgr_payRate'] + '/hr — checksum VERIFIED') : (s['mgr_payRate_invalid'] ? 'REJECTED (checksum mismatch — possible URL edit)' : 'not provided')],
       ['Device / browser', (navigator.userAgent || '-').slice(0, 95)]
     ];
@@ -1652,9 +1654,9 @@ async function generateConsolidatedPdf() {
     // AND the controlling English text is on the same page).
     const dayEs = (s['lang'] === 'es');
     cp.drawText(dayEs ? '1.  CONFIRMACIÓN DEL EMPLEADO (en persona)' : '1.  EMPLOYEE CONFIRMATION (in person)', { x: 50, y: cy, size: 11, font: fontBold }); cy -= 16;
-    const confirmEn = 'I, ' + (s['hire-name'] || '________________') + ', confirm in person that I electronically signed this intake packet on ' + new Date().toLocaleDateString() + ', and I re-affirm each acknowledgment in it — including the Employee Handbook acknowledgment, the Mutual Arbitration Agreement, and the At-Will Offer Letter. The electronic signature in this packet is mine.';
+    const confirmEn = 'I, ' + (s['hire-name'] || '________________') + ', confirm in person that I electronically signed this intake packet on ' + new Date().toLocaleDateString('en-US') + ', and I re-affirm each acknowledgment in it — including the Employee Handbook acknowledgment, the Mutual Arbitration Agreement, and the At-Will Offer Letter. The electronic signature in this packet is mine.';
     if (dayEs) {
-      const confirmEs = 'Yo, ' + (s['hire-name'] || '________________') + ', confirmo en persona que firmé electrónicamente este paquete de ingreso el ' + new Date().toLocaleDateString() + ', y reafirmo cada reconocimiento en él — incluyendo el acuse del Manual del Empleado, el Acuerdo Mutuo de Arbitraje y la Carta de Oferta de empleo a voluntad. La firma electrónica en este paquete es mía.';
+      const confirmEs = 'Yo, ' + (s['hire-name'] || '________________') + ', confirmo en persona que firmé electrónicamente este paquete de ingreso el ' + new Date().toLocaleDateString('en-US') + ', y reafirmo cada reconocimiento en él — incluyendo el acuse del Manual del Empleado, el Acuerdo Mutuo de Arbitraje y la Carta de Oferta de empleo a voluntad. La firma electrónica en este paquete es mía.';
       wrapText(confirmEs, 92).forEach(line => { cp.drawText(line, { x: 50, y: cy, size: 10, font }); cy -= 14; });
       cy -= 4;
       wrapText('(English original) ' + confirmEn, 110).forEach(line => { cp.drawText(line, { x: 50, y: cy, size: 8, font, color: rgb(0.4, 0.4, 0.4) }); cy -= 11; });
@@ -1675,7 +1677,7 @@ async function generateConsolidatedPdf() {
     cy -= 12;
     cp.drawText('Printed name and title', { x: 50, y: cy, size: 8, font, color: rgb(0.35, 0.35, 0.35) });
     cy -= 26;
-    cp.drawText('Employee: ' + (s['hire-name'] || '-') + '    |    E-signed: ' + new Date().toLocaleDateString() + '    |    Store: ' + store.name, { x: 50, y: cy, size: 9, font });
+    cp.drawText('Employee: ' + (s['hire-name'] || '-') + '    |    E-signed: ' + new Date().toLocaleDateString('en-US') + '    |    Store: ' + store.name, { x: 50, y: cy, size: 9, font });
     cy -= 14;
     cp.drawText('File this signed page with the packet in the entity\'s personnel records. Do not distribute.', { x: 50, y: cy, size: 8, font, color: rgb(0.4, 0.4, 0.4) });
   }
