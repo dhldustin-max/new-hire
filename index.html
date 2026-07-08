@@ -786,7 +786,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04l</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04m</div>
   </div>
 
 </div>
@@ -825,7 +825,7 @@ if (self !== top) { try { top.location = self.location; } catch (e) { document.d
 // ============ DATA ============
 const STORES = [
   // Per-store wage info for Wage Theft Prevention Notice (CA Labor Code §2810.5).
-  // legalEntity = real employer of record (Secretary of State name) from the OMC handbook generator.
+  // legalEntity = real employer of record (Secretary of State name) from the document generator.
   // handbookUrl = that entity's own generated CA handbook (converted to PDF). payday is the
   // entity's default; payRate is per-hire (URL param ?payRate=18, overtime auto 1.5x).
   // address/phone/workersCompCarrier still need filling per LLC.
@@ -847,7 +847,7 @@ const STORES = [
 ];
 
 // Acknowledgments shown on Page 4. ONE signature covers all of them.
-// group "documents" = real per-entity PDFs (from the OMC handbook generator) with an Open button;
+// group "documents" = real per-entity PDFs (from the document generator) with an Open button;
 //   `doc` (and optional `docES`) is the filename inside docs/<store.entityFolder>/.
 // group "policies" = statement-only acknowledgments. "ack-wtpn" also renders the live wage table.
 const ACK_ITEMS = [
@@ -1019,7 +1019,7 @@ function purgeAbandonedSession() {
 // REJECTED — the signed wage notice then shows "confirm with manager" instead of
 // printing a tampered number. (Not cryptography — tamper-evidence + evidence trail.)
 function linkChecksum(storeId, roleId, payRate) {
-  const str = [storeId || '', roleId || '', String(payRate || ''), 'OMC-K1'].join('|');
+  const str = [storeId || '', roleId || '', String(payRate || ''), 'NH-K1'].join('|');
   let h = 5381;
   for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
   return h.toString(36);
@@ -2424,13 +2424,13 @@ function dataUrlToBlob(dataUrl) {
 }
 
 // PDF-SAVE-ONLY flow (Dustin 2026-07-04, option 2): the employee saves the packet to their
-// own phone and hands it to their manager, who forwards it to OMC. Nothing is auto-uploaded
+// own phone and hands it to their manager, who files it for the operating company. Nothing is auto-uploaded
 // to any central inbox — this keeps each store's records at the operating-entity level.
 const COMPANY_EMAIL = 'omchospitalityhr@gmail.com';  // kept for the (dormant) fallbacks only
 // Direct-upload endpoint intentionally DISABLED. The Apps Script + this URL still exist and
 // can be re-enabled (paste the /exec URL here) if counsel later approves per-entity routing.
 const SUBMIT_ENDPOINT = '';
-const SUBMIT_TOKEN = 'OMC-PKT-2026';  // must match SHARED_TOKEN in the Apps Script
+const SUBMIT_TOKEN = 'NH-PKT-2026';  // must match SHARED_TOKEN in the Apps Script
 
 // Uint8Array → base64 (chunked; large PDFs would overflow the argument list otherwise).
 function uint8ToBase64(u8) {
