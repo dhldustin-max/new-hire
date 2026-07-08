@@ -460,7 +460,7 @@
         <div class="field">
           <label lang="en">Date of birth</label>
           <label lang="es">Fecha de nacimiento</label>
-          <input id="hire-dob" type="date" />
+          <input id="hire-dob" type="date" max="2020-01-01" />
         </div>
         <div class="field">
           <label lang="en">Start date</label>
@@ -634,6 +634,19 @@
           </div>
           <div class="actions"><a href="https://calcivilrights.ca.gov/posters/sexual-harassment/" target="_blank" rel="noopener" onclick="recordPamphletOpen()">Link</a></div>
         </div>
+
+        <div class="form-row">
+          <div class="icon">🤝</div>
+          <div>
+            <div class="name">Survivors' Right to Time Off (CRD)</div>
+            <div class="desc" lang="en">Time off & protections if you or your family is a victim of violence (AB 2499).</div>
+            <div class="desc" lang="es">Tiempo libre y protecciones si tú o tu familia son víctimas de violencia (AB 2499).</div>
+          </div>
+          <div class="actions">
+            <a href="https://calcivilrights.ca.gov/wp-content/uploads/sites/32/2025/07/Survivors-Right-to-Time-Off_English-B.pdf" target="_blank" rel="noopener" onclick="recordPamphletOpen()">EN</a>
+            <a href="https://calcivilrights.ca.gov/wp-content/uploads/sites/32/2025/07/Survivors-Right-to-Time-Off_Spanish-B.pdf" target="_blank" rel="noopener" class="secondary" onclick="recordPamphletOpen()">ES</a>
+          </div>
+        </div>
       </div>
 
       <div class="card" style="border-left:4px solid #d97706;background:#fffbeb;">
@@ -773,7 +786,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04k</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04l</div>
   </div>
 
 </div>
@@ -877,8 +890,8 @@ const ACK_ITEMS = [
   },
   {
     key: "ack-harass", icon: "🛡️", group: "policies",
-    en: { title: "Sexual Harassment Prevention Policy", body: "I have received the company's sexual harassment prevention policy. I understand that harassment, retaliation, and discrimination are prohibited and that I can report concerns to my manager, the Director, or the CA Civil Rights Department." },
-    es: { title: "Política de Prevención de Acoso Sexual", body: "He recibido la política de prevención de acoso sexual de la compañía. Entiendo que el acoso, las represalias y la discriminación están prohibidos y puedo reportar al gerente, al Director, o al CA Civil Rights Department." }
+    en: { title: "Sexual Harassment Prevention Policy", body: "I have received the company's sexual harassment prevention policy. I understand that harassment, retaliation, and discrimination are prohibited and that I can report concerns to my manager, the General Manager, or the CA Civil Rights Department." },
+    es: { title: "Política de Prevención de Acoso Sexual", body: "He recibido la política de prevención de acoso sexual de la compañía. Entiendo que el acoso, las represalias y la discriminación están prohibidos y puedo reportar al gerente, al Gerente General, o al CA Civil Rights Department." }
   },
   {
     key: "ack-comp", icon: "🏥", group: "policies",
@@ -892,8 +905,8 @@ const ACK_ITEMS = [
   },
   {
     key: "ack-breaks", icon: "☕", group: "policies",
-    en: { title: "Meal & Rest Break Policy", body: "I understand California law gives me a 30-minute uninterrupted, duty-free meal break for shifts over 5 hours, and a paid 10-minute rest break for every 4 hours worked. If I am not given a break, I will tell my manager or the Director immediately." },
-    es: { title: "Política de Descansos para Comer y Descansar", body: "Entiendo que la ley de CA me da un descanso de 30 minutos sin interrupciones para comer en turnos de más de 5 horas, y un descanso pagado de 10 minutos por cada 4 horas trabajadas. Si no recibo un descanso, le diré al gerente o al Director inmediatamente." }
+    en: { title: "Meal & Rest Break Policy", body: "I understand California law gives me a 30-minute uninterrupted, duty-free meal break for shifts over 5 hours, and a paid 10-minute rest break for every 4 hours worked. If I am not given a break, I will tell my manager or the General Manager immediately." },
+    es: { title: "Política de Descansos para Comer y Descansar", body: "Entiendo que la ley de CA me da un descanso de 30 minutos sin interrupciones para comer en turnos de más de 5 horas, y un descanso pagado de 10 minutos por cada 4 horas trabajadas. Si no recibo un descanso, le diré al gerente o al Gerente General inmediatamente." }
   },
   {
     key: "ack-pamphlets", icon: "📖", group: "policies",
@@ -970,7 +983,17 @@ function patchState(patch) {
   const s = getState();
   Object.assign(s, patch);
   s['touched-at'] = Date.now();  // for the abandoned-session TTL purge (see init)
-  try { setState(s); } catch (err) { console.warn("localStorage quota", err); }
+  try { setState(s); }
+  catch (err) {
+    console.warn("localStorage quota", err);
+    // Surface it once — otherwise a near-full phone silently drops the signature/ack write.
+    if (!window.__quotaWarned) {
+      window.__quotaWarned = true;
+      alert(getLang() === 'en'
+        ? 'This phone is low on storage, so your latest step may not have saved. Remove a photo or a tax-form page, or finish on a different phone.'
+        : 'Este teléfono tiene poco espacio; tu último paso podría no haberse guardado. Quita una foto o una página de formularios, o termina en otro teléfono.');
+    }
+  }
 }
 
 // Abandoned-session TTL: if a session captured PII but was never submitted and hasn't been
@@ -1014,8 +1037,13 @@ function ingestUrlParams() {
   if (params.get("store")) {
     const incomingHid = params.get("hid") || "";
     const storedHid = s["mgr_hid"] || "";
-    const differentHire = incomingHid && incomingHid !== storedHid;
-    if (differentHire || s["purged-at"]) {
+    // Start fresh unless this is the SAME hire's link reopening. "Same hire" = matching hid.
+    // Any other case where prior data exists (different hid, or a hid-less link opened over a
+    // prior session) is treated as a NEW person → wipe, so no prior PII carries over on a
+    // shared phone. Same-hid reopen is preserved even after submit (so "Sent" still shows).
+    const hasPriorData = !!(storedHid || s["hire-name"] || s["purged-at"] || s["doc-ssn"]);
+    const sameHire = incomingHid && storedHid && incomingHid === storedHid;
+    if (hasPriorData && !sameHire) {
       localStorage.removeItem(STORAGE_KEY);
       s = {};
     }
@@ -1853,6 +1881,7 @@ function saveDocValue(key, value) {
   const s = getState();
   const prev = s[key];
   if (value === null || value === undefined) delete s[key]; else s[key] = value;
+  s['touched-at'] = Date.now();  // keep the session "alive" so the TTL purge can't wipe an active upload
   try { setState(s); return true; }
   catch (err) {
     const s2 = getState();
@@ -2693,7 +2722,17 @@ function renderManagerTools() {
     const st = document.getElementById('mt-store').value;
     const ro = document.getElementById('mt-role').value;
     const pay = document.getElementById('mt-pay').value;
-    if (pay && (parseFloat(pay) < 16 || parseFloat(pay) > 99)) { alert('Pay rate looks wrong (CA minimum is ~$17). Double-check.'); return; }
+    // §2810.5 requires the wage notice to show the rate — so a rate is REQUIRED, and it must
+    // not be below the store's city minimum (as of 7/1/2026). Manager can override a below-floor
+    // rate for a genuine edge case, but must confirm.
+    if (!pay) { alert('Pay rate is required — the Wage Theft Prevention Notice (Labor Code 2810.5) must show it. Enter the hourly rate.'); return; }
+    const payNum = parseFloat(pay);
+    if (!(payNum >= 5 && payNum <= 200)) { alert('That pay rate looks wrong. Enter the hourly rate in dollars, e.g. 18.50.'); return; }
+    const STORE_MIN = { 'ohgane-oakland':17.34, 'ohgane-concord':16.90, 'ohgane-alameda':17.76, 'tangjip-concord':16.90, 'tangjip-alameda':17.76, 'oh-g-burger-berkeley':19.61, 'obento-hayward':17.79, 'hanshin-pocha-oakland':17.34, 'spoon-berkeley':19.61, 'bowld-albany':16.90, 'jjamppong-zizon-oakland':17.34 };
+    const floor = STORE_MIN[st] || 16.90;
+    if (payNum < floor) {
+      if (!confirm('$' + payNum.toFixed(2) + '/hr is BELOW this store’s minimum wage of $' + floor.toFixed(2) + '/hr (effective 7/1/2026). Sending this would create a signed wage notice below minimum wage. Continue anyway?')) return;
+    }
     const mgrName = document.getElementById('mt-mgr').value.trim();
     const budName = document.getElementById('mt-buddy').value.trim();
     if (!winAnsiOk(mgrName) || !winAnsiOk(budName)) {
