@@ -786,7 +786,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-07-04m</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-09-18a</div>
   </div>
 
 </div>
@@ -926,6 +926,26 @@ function recordPamphletOpen() {
 function storeDocUrl(store, filename) {
   if (!store || !store.entityFolder || !filename) return null;
   return 'docs/' + store.entityFolder + '/' + filename;
+}
+
+// ============ MINIMUM-WAGE FLOORS (sanity-check for manager-entered pay rates) ============
+// Used by ?manager-tools to stop a link being generated below the store city's minimum and
+// memorialized in a signed §2810.5 wage notice. THESE EXPIRE — when rates change, update the
+// table AND push WAGE_TABLE_VALID_THROUGH forward, or the check silently goes stale.
+//   CA state:  $16.90 → $17.40 on 2027-01-01 (announced 2026-07-31)
+//   Oakland / Hayward: adjust every Jan 1 (city publishes by ~Oct 1)
+//   Alameda / Berkeley: adjust every Jul 1 (current rates hold through 2027-06-30)
+const WAGE_TABLE_VALID_THROUGH = '2026-12-31';
+const STORE_MIN_WAGE = {
+  'ohgane-oakland': 17.34, 'hanshin-pocha-oakland': 17.34, 'jjamppong-zizon-oakland': 17.34,  // Oakland
+  'ohgane-alameda': 17.76, 'tangjip-alameda': 17.76,                                          // Alameda
+  'oh-g-burger-berkeley': 19.61, 'spoon-berkeley': 19.61,                                     // Berkeley
+  'obento-hayward': 17.79,                                                                    // Hayward (26+)
+  'ohgane-concord': 16.90, 'tangjip-concord': 16.90, 'bowld-albany': 16.90                     // CA state rate
+};
+const CA_STATE_MIN = 16.90;
+function wageTableStale() {
+  return new Date().toISOString().slice(0, 10) > WAGE_TABLE_VALID_THROUGH;
 }
 
 const ROLES = {
@@ -2705,6 +2725,9 @@ function renderManagerTools() {
   document.querySelector('.container').innerHTML =
     '<div class="topbar"><span class="brand-mark">Manager Link Generator</span></div>' +
     '<div class="card info-card"><p style="font-size:12.5px;color:#1e40af;margin:0;">Managers only. Fill this out and text/email the generated link to the new hire. The pay rate is checksum-locked — if anyone edits it in the URL, the app rejects it.</p></div>' +
+    (wageTableStale()
+      ? '<div class="card" style="border-left:4px solid #dc2626;background:#fef2f2;"><p style="font-size:12.5px;color:#991b1b;margin:0;"><b>⚠️ Minimum-wage table is out of date</b> (expired ' + WAGE_TABLE_VALID_THROUGH + '). California and city rates change on Jan 1 / Jul 1. This app can no longer check whether a pay rate is legal — get it updated before sending new hire links.</p></div>'
+      : '') +
     '<div class="card">' +
       '<div class="field"><label>Store</label><select id="mt-store">' + storeOpts + '</select></div>' +
       '<div class="field"><label>Role</label><select id="mt-role">' + roleOpts + '</select></div>' +
@@ -2728,10 +2751,16 @@ function renderManagerTools() {
     if (!pay) { alert('Pay rate is required — the Wage Theft Prevention Notice (Labor Code 2810.5) must show it. Enter the hourly rate.'); return; }
     const payNum = parseFloat(pay);
     if (!(payNum >= 5 && payNum <= 200)) { alert('That pay rate looks wrong. Enter the hourly rate in dollars, e.g. 18.50.'); return; }
-    const STORE_MIN = { 'ohgane-oakland':17.34, 'ohgane-concord':16.90, 'ohgane-alameda':17.76, 'tangjip-concord':16.90, 'tangjip-alameda':17.76, 'oh-g-burger-berkeley':19.61, 'obento-hayward':17.79, 'hanshin-pocha-oakland':17.34, 'spoon-berkeley':19.61, 'bowld-albany':16.90, 'jjamppong-zizon-oakland':17.34 };
-    const floor = STORE_MIN[st] || 16.90;
-    if (payNum < floor) {
-      if (!confirm('$' + payNum.toFixed(2) + '/hr is BELOW this store’s minimum wage of $' + floor.toFixed(2) + '/hr (effective 7/1/2026). Sending this would create a signed wage notice below minimum wage. Continue anyway?')) return;
+    const floor = STORE_MIN_WAGE[st] || CA_STATE_MIN;
+    if (wageTableStale()) {
+      // The table has passed its review date — rates have almost certainly changed, so the
+      // floor below can no longer be trusted. Make the manager acknowledge it every time.
+      if (!confirm('⚠️ The minimum-wage table in this app expired on ' + WAGE_TABLE_VALID_THROUGH +
+        ' and has NOT been updated. Any rate you send now may be below the current legal minimum. '
+        + 'Ask Dustin to update the app before sending hire links. Continue anyway?')) return;
+    } else if (payNum < floor) {
+      if (!confirm('$' + payNum.toFixed(2) + '/hr is BELOW this store’s minimum wage of $' + floor.toFixed(2) +
+        '/hr. Sending this would create a signed wage notice below minimum wage. Continue anyway?')) return;
     }
     const mgrName = document.getElementById('mt-mgr').value.trim();
     const budName = document.getElementById('mt-buddy').value.trim();
