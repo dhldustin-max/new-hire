@@ -384,6 +384,34 @@
   body[data-lang="es"] [lang="en"] { display: none; }
 
   [hidden] { display: none !important; }
+
+  /* Link generator inside the manager hub (?manager-tools&embed=hub&theme=light|dark): the hub's own look. */
+  html.hub { --page: #fcfcfb; --surface: #f9f9f7; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --line: rgba(11,11,11,0.12); --accent: #2a78d6; --accent-ink: #fff; --note: rgba(42,120,214,0.08); color-scheme: light; }
+  html.hub.hub-dark { --page: #1a1a19; --surface: #0d0d0d; --ink: #fff; --ink-2: #c3c2b7; --muted: #898781;
+    --line: rgba(255,255,255,0.12); --accent: #3987e5; --note: rgba(57,135,229,0.14); color-scheme: dark; }
+  html.hub body { background: var(--page); color: var(--ink); padding: 16px 18px; min-height: 0;
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  html.hub .container { max-width: none; padding-bottom: 0; }
+  html.hub .topbar { display: none; }
+  html.hub .card { background: transparent; border: 0; box-shadow: none; padding: 0; margin-bottom: 14px; border-radius: 0; }
+  html.hub .info-card { background: var(--note); border: 0; border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px 12px; }
+  html.hub .info-card p { color: var(--ink-2) !important; font-size: 12.5px; }
+  html.hub .card[style*="border-left"] { padding: 10px 12px; border-radius: 8px; }
+  html.hub .field { margin-bottom: 14px; }
+  html.hub .field label { color: var(--ink-2); font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 600; margin-bottom: 5px; }
+  html.hub .field input, html.hub .field select { width: 100%; padding: 9px 11px; font: inherit; font-size: 16px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-height: 42px; }
+  html.hub .field select:disabled { opacity: 1; color: var(--ink-2); }
+  html.hub .field input:focus, html.hub .field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; box-shadow: none; }
+  html.hub .field input::placeholder { color: var(--muted); }
+  html.hub .btn-big { background: var(--accent); border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; }
+  html.hub .btn-big:hover { filter: brightness(1.08); background: var(--accent); }
+  html.hub .btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--line); border-radius: 8px; font-weight: 600; }
+  html.hub .btn-secondary:hover { background: var(--note); }
+  html.hub #mt-url { background: var(--surface) !important; border: 1px solid var(--line) !important; color: var(--ink); font-size: 12.5px !important; }
+  html.hub .mt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  @media (max-width: 520px) { html.hub .mt-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body data-lang="en">
@@ -786,7 +814,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-10-14a</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-10-14b</div>
   </div>
 
 </div>
@@ -2721,6 +2749,8 @@ function resetAll() {
 // hand-type URLs and tampered pay rates are detectable.
 function renderManagerTools() {
   const base = location.origin + location.pathname;
+  const q = new URLSearchParams(location.search), inHub = q.get('embed') === 'hub' && self !== top;
+  if (inHub) { document.documentElement.classList.add('hub'); if (q.get('theme') === 'dark') document.documentElement.classList.add('hub-dark'); }
   // Stores missing §2810.5 wage-notice data (workers' comp carrier, address) are disabled so
   // a manager can't generate a packet with a blank legally-required field for them.
   const storeOpts = STORES.map(st => st.notReady
@@ -2735,10 +2765,12 @@ function renderManagerTools() {
       : '') +
     '<div class="card">' +
       '<div class="field"><label>Store</label><select id="mt-store">' + storeOpts + '</select></div>' +
+      '<div class="mt-grid">' +
       '<div class="field"><label>Role</label><select id="mt-role">' + roleOpts + '</select></div>' +
-      '<div class="field"><label>Pay rate ($/hour)</label><input id="mt-pay" type="number" step="0.25" min="16" max="99" placeholder="18.00" /></div>' +
+      '<div class="field"><label>Pay rate ($/hour)</label><input id="mt-pay" type="number" inputmode="decimal" step="0.25" min="16" max="99" placeholder="18.00" /></div>' +
       '<div class="field"><label>Manager name</label><input id="mt-mgr" type="text" placeholder="—" /></div>' +
       '<div class="field"><label>Buddy / trainer name</label><input id="mt-buddy" type="text" placeholder="—" /></div>' +
+      '</div>' +
       '<div class="field"><label>Language</label><select id="mt-lang"><option value="en">English</option><option value="es">Español</option></select></div>' +
       '<button class="btn-big" onclick="mtGenerate()">🔗 Generate link</button>' +
       '<div id="mt-out" style="margin-top:12px;" hidden>' +
@@ -2750,6 +2782,7 @@ function renderManagerTools() {
   const preStore = new URLSearchParams(location.search).get('store');
   const sel = document.getElementById('mt-store'), preOpt = preStore && sel.querySelector('option[value="' + CSS.escape(preStore) + '"]');
   if (preOpt) { sel.value = preStore; sel.disabled = true; if (preOpt.disabled) sel.insertAdjacentHTML('afterend', '<p style="font-size:12.5px;color:#991b1b;margin:6px 0 0;">This store is not ready for hire links yet — ask the office.</p>'); }
+  if (inHub && window.ResizeObserver) new ResizeObserver(() => parent.postMessage({ nhHeight: Math.ceil(document.querySelector('.container').getBoundingClientRect().bottom) + 16 }, 'https://omc-hub.pages.dev')).observe(document.querySelector('.container'));
   window.mtGenerate = function() {
     const st = document.getElementById('mt-store').value;
     if (document.getElementById('mt-store').selectedOptions[0]?.disabled) { alert('This store is not ready for hire links yet — ask the office.'); return; }
