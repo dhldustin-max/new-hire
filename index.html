@@ -786,7 +786,7 @@
       <a href="#" onclick="resetAll(); return false;" lang="en">Start over</a>
       <a href="#" onclick="resetAll(); return false;" lang="es">Empezar de nuevo</a>
     </div>
-    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-10-13a</div>
+    <div style="margin-top:8px;color:#c7c7cc;font-size:10px;">v2026-10-13b</div>
   </div>
 
 </div>
@@ -820,7 +820,11 @@
 // Frame-buster: this page captures ID/SSN photos + a drawn signature, so it must never
 // run inside another site's iframe (clickjacking / UI-redress). GitHub Pages can't send
 // X-Frame-Options, so we bust out of frames in JS.
-if (self !== top) { try { top.location = self.location; } catch (e) { document.documentElement.innerHTML = ''; } }
+// Never framed, except the manager link generator inside the manager hub (the new-hire wizard always breaks out).
+if (self !== top && !(new URLSearchParams(location.search).has('manager-tools') &&
+    (location.ancestorOrigins ? location.ancestorOrigins[0] : document.referrer.replace(/^(https:\/\/[^/]+).*$/, '$1')) === 'https://omc-hub.pages.dev')) {
+  try { top.location = self.location; } catch (e) { document.documentElement.innerHTML = ''; }
+}
 
 // ============ DATA ============
 const STORES = [
